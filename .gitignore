@@ -1,0 +1,10 @@
+vendor/
+bentest/
+sql/
+output/
+sqlite/
+stream_configs/
+*.json
+*.env
+!sample.env
+leftshove
