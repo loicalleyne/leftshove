@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/bigquery v1.42.0
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/benthosdev/benthos/v4 v4.10.0
-	github.com/jackc/pgx/v5 v5.1.1
+	github.com/jackc/pgx/v5 v5.2.0
 	github.com/joho/godotenv v1.4.0
 	github.com/spf13/cast v1.5.0
 	github.com/waclawthedev/go-sugaring v1.0.1

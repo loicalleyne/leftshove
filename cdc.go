@@ -14,6 +14,7 @@ import (
 )
 
 func cdc() error {
+	var err error
 	dsnCount := cast.ToInt64(os.Getenv("PG_DSN_COUNT"))
 	if dsnCount < 1 {
 		return fmt.Errorf("missing or invalid env var: pg_dsn_count")
@@ -61,7 +62,10 @@ func cdc() error {
 
 			currentTime := time.Now()
 			diff := currentTime.Sub(t.NMS)
+			lastShoveDiff := currentTime.Sub(t.LastShove)
 			switch {
+			case lastShoveDiff < time.Duration(replicationBufferSecs) && t.NMS.Add(time.Second*time.Duration(replicationBufferSecs)).After(currentTime.Add(-time.Second*time.Duration(replicationBufferSecs))):
+				continue
 			case rowDiff > (batchCount * 8):
 				hours := 336 // cast.ToInt64(diff.Hours() / (rowDiff / (batchCount * 8)))
 
@@ -71,8 +75,8 @@ func cdc() error {
 				} else {
 					t.NewNMS = currentTime.Add(-time.Second * time.Duration(replicationBufferSecs))
 				}
-				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\thours:%v\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), hours, t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
-			case rowDiff == 0 && diff.Hours() > 336:
+				log.Printf("case 1:table %v.%v\t\t\trowGrowthSinceSeed: %v\tdiff.Hours: %v\thours:%v\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), hours, t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
+			case rowDiff < batchCount && diff.Hours() > 336:
 				hours := 336
 
 				// set new nms at most x seconds in the past to account for replication delay if syncing from a replica
@@ -81,13 +85,13 @@ func cdc() error {
 				} else {
 					t.NewNMS = currentTime.Add(-time.Second * time.Duration(replicationBufferSecs))
 				}
-				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\thours:%v\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), hours, t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
+				log.Printf("case 2:table %v.%v\t\t\trowGrowthSinceSeed: %v\tdiff.Hours: %v\thours:%v\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), hours, t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
 			case diff.Seconds() < cast.ToFloat64(replicationBufferSecs*2):
 				t.NewNMS = t.NMS.Add(time.Second * cast.ToDuration(diff.Seconds()/3))
-				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\t\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
+				log.Printf("case 3:table %v.%v\t\t\trowGrowthSinceSeed: %v\tdiff.Hours: %v\t\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
 			default:
 				t.NewNMS = currentTime.Add(-time.Second * time.Duration(replicationBufferSecs))
-				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\t\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
+				log.Printf("case 4:table %v.%v\t\t\trowGrowthSinceSeed: %v\tdiff.Hours: %v\t\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
 
 			}
 
@@ -107,7 +111,7 @@ func cdc() error {
 				}
 			}
 		}
-		// numCPUs := runtime.NumCPU()
+
 		concurrentStreams := cast.ToInt(os.Getenv("BENTHOS_CONCURRENT_STREAMS"))
 		if concurrentStreams > runtime.NumCPU() && runtime.NumCPU() > 1 {
 			concurrentStreams = runtime.NumCPU() - 1
@@ -120,7 +124,7 @@ func cdc() error {
 				go func() {
 					log.Printf("stream table %v.%v\n", tables[i].DSNEnum, tables[i].Name)
 					defer wg.Done()
-					err := tables[i].stream.Run(context.Background())
+					err = tables[i].stream.Run(context.Background())
 					if err != nil {
 						log.Printf("stream failure: %v.%v - %v", tables[i].DSNEnum, tables[i].Name, err)
 						return
@@ -131,23 +135,11 @@ func cdc() error {
 						return
 					}
 				}()
-				// ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*60))
-				// defer cancel()
-				/*
-					err := tables[i].stream.Run(context.Background())
-					if err != nil {
-						return fmt.Errorf("stream error: %v", err)
-					}
-					err = updateNMS(tables[i], nmsDB)
-					if err != nil {
-						return fmt.Errorf("nms update error: %v", err)
-					}
-				*/
 			}
 		}
-
+		wg.Wait()
 		nmsDB.Close()
 		pgPool.Close()
 	}
-	return nil
+	return err
 }

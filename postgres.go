@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cast"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/spf13/cast"
 
 	sugar "github.com/waclawthedev/go-sugaring"
 )

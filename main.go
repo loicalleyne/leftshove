@@ -73,7 +73,7 @@ func CtrlC() {
 	go func() {
 		<-c
 		log.Printf("End")
-		fmt.Fprintf(os.Stdout, " ⬅🖐👋\n")
+		fmt.Fprintf(os.Stdout, " ⬅🖐 👋\n")
 		os.Exit(5)
 	}()
 }

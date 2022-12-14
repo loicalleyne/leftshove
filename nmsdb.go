@@ -17,6 +17,7 @@ type table struct {
 	ID           int       `json:"id"`
 	NMS          time.Time `json:"nms"`
 	NewNMS       time.Time `json:"new_nms"`
+	LastShove    time.Time `json:"last_shoved_on"`
 	DSNEnum      int64     `json:"dsn_enum"`
 	LastRowCount int64     `json:"last_row_count"`
 	Name         string    `json:"name"`
@@ -107,7 +108,7 @@ func seedNMSTable(pgTableWithNMS pgTable, nmsDB *sql.DB) error {
 func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 	var tables []table
 
-	rows, err := nmsDB.Query("SELECT id, name, schema, table_schema, bq_schema, nms, nmsColumn, last_row_count, dsn FROM nmstables")
+	rows, err := nmsDB.Query("SELECT id, name, schema, table_schema, bq_schema, nms, nmsColumn, last_row_count, dsn, last_shoved_on FROM nmstables")
 	if err != nil {
 		return nil, fmt.Errorf("nmsQuery select error: %v", err)
 	}
@@ -123,8 +124,9 @@ func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 		var nmsColumn sql.NullString
 		var rowCount int64
 		var dsn int64
+		var lastShove time.Time
 		var t table
-		err = rows.Scan(&id, &name, &schema, &tableSchema, &bqSchema, &nms, &nmsColumn, &rowCount, &dsn)
+		err = rows.Scan(&id, &name, &schema, &tableSchema, &bqSchema, &nms, &nmsColumn, &rowCount, &dsn, &lastShove)
 		if err != nil {
 			return nil, fmt.Errorf("gettableswithnms() scan error: %v", err)
 		}
@@ -137,6 +139,7 @@ func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 		t.NMSColumn = nmsColumn.String
 		t.LastRowCount = rowCount
 		t.DSNEnum = dsn
+		t.LastShove = lastShove
 		tables = append(tables, t)
 	}
 
