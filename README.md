@@ -1,7 +1,9 @@
-**leftshove** 
+# leftshove 
 *why LEFT JOIN when you can LEFTSHOVE?*
+
 An opinionated CDC utility.
 Captures incremental table snapshots by querying on windows of 'not modified since' timestamps.
+Automatic creation of Bigquery sink dataset/tables.
 Uses Benthos Streams under the hood for streaming data from source to sink.
 State stored locally with sqlite.
 
@@ -30,6 +32,8 @@ BigQuery
 - additional Benthos-supported outputs
 - option for output to parquet file + S3/GCS
 - option for output to BigQuery streaming/storage API insert
+- option for BigQuery table partitioning at table creation
 - option for output to any Benthos output
 - handle source table name collisions; for now it is recommended to output each source to a separate BigQuery dataset
 - fix Benthos logging to file
+- automatic creation of BigQuery views showing current state
