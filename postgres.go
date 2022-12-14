@@ -41,11 +41,67 @@ func getPGConnection(dbURL string) (*pgxpool.Pool, error) {
 }
 
 func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgDB *pgxpool.Pool) (string, error) {
-	var queryGenTemplate string = `SELECT CONCAT('SELECT ', ARRAY_TO_STRING(ARRAY_AGG(CONCAT(column_name, ' ')), ', '),', now () AS snapshot_tm FROM ', table_name, ' WHERE {minfield} > ','''{nms}'' AND {minfield} <= ''{newtimestamp}''') AS query FROM (select table_name, ordinal_position, CASE WHEN udt_name LIKE '\_%' THEN CONCAT('array_to_json(',column_name,') AS ', column_name) WHEN udt_name LIKE '{percent}vector' THEN CONCAT('array_to_json(',column_name,') AS ', column_name) ELSE column_name END AS column_name FROM INFORMATION_SCHEMA.columns WHERE table_schema = '{table_schema}' ORDER BY table_name, ordinal_position) AS schema WHERE table_name = '{table_name}' GROUP BY table_name`
-	queryGenTemplate = strings.Replace(queryGenTemplate, "{percent}", "%", 1)
-	// log.Println(queryGenTemplate)
 	var tableQuery string
-	queryGen := strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(queryGenTemplate, "{minfield}", nmsColumn, 2), "{newtimestamp}", newNMS, 1), "{table_schema}", tableSchema, 1), "{table_name}", tableName, 1), "{nms}", nms, 1)
+	var queryGenTemplate string = `
+	SELECT 
+		CONCAT(
+			'SELECT ', 
+				ARRAY_TO_STRING(ARRAY_AGG(CONCAT(column_name, ' ')), ', '),', 
+				now () AS snapshot_tm 
+			FROM ', table_name, ' 
+			WHERE {minfield} > ','''{nms}''
+				AND {minfield} <= ''{newtimestamp}''') AS query 
+	FROM 
+		(SELECT 
+			table_name, 
+			ordinal_position, 
+			CASE 
+				WHEN udt_name LIKE '\_%' THEN CONCAT('array_to_json(',column_name,') AS ', column_name) 
+				WHEN udt_name LIKE '{percent}vector' THEN CONCAT('array_to_json(',column_name,') AS ', column_name)
+				{munging}
+				ELSE column_name 
+			END AS column_name 
+			FROM INFORMATION_SCHEMA.columns 
+		WHERE table_schema = '{table_schema}'
+		ORDER BY table_name, ordinal_position) AS schema 
+	WHERE table_name = '{table_name}' 
+	GROUP BY table_name`
+
+	queryGen := strings.Replace(queryGenTemplate, "{percent}", "%", 1)
+	var munging string
+	if cast.ToBool(os.Getenv("MUNGE_TIMESTAMPS_BEFORE_MIN")) {
+		t := cast.ToTime(os.Getenv("MUNGE_MIN_TIMESTAMP"))
+		if !t.IsZero() {
+			if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_NULL")) {
+				munging = `
+				WHEN udt_name IN ('timestamp', 'timestamptz') 
+					THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN NULL ELSE ', column_name, ' END AS ', column_name)`
+			}
+			if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_MIN")) {
+				munging = `
+					WHEN udt_name IN ('timestamp', 'timestamptz') 
+						THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name, ' END AS ', column_name)`
+			}
+		}
+	}
+	if cast.ToBool(os.Getenv("MUNGE_TIMESTAMPS_BEFORE_EPOCH")) {
+		if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_NULL")) {
+			munging = `
+			WHEN udt_name IN ('timestamp', 'timestamptz') 
+				THEN CONCAT('CASE WHEN ',column_name,' < ''1970-01-01 00:00:00'' THEN NULL ELSE ', column_name, ' END AS ', column_name)`
+		}
+		if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_MIN")) {
+			t := cast.ToTime(os.Getenv("MUNGE_MIN_TIMESTAMP"))
+			if !t.IsZero() && t.Before(time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)) {
+				munging = `
+				WHEN udt_name IN ('timestamp', 'timestamptz') 
+					THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name, ' END AS ', column_name)`
+			}
+		}
+	}
+	queryGen = strings.Replace(queryGen, "{munging}", munging, 1)
+	queryGen = strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(queryGen, "{minfield}", nmsColumn, 2), "{newtimestamp}", newNMS, 1), "{table_schema}", tableSchema, 1), "{table_name}", tableName, 1), "{nms}", nms, 1)
+	// log.Println(queryGen)
 	conn, err := pgDB.Acquire(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("pg conn acquire error: %v", err)

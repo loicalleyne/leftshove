@@ -12,8 +12,8 @@ import (
 )
 
 func main() {
-	log.Printf("⬅🖐 leftshove started")
 	Singleton("127.0.0.1:51337")
+	log.Printf("⬅🖐 leftshove started")
 	CtrlC()
 
 	var confFile string

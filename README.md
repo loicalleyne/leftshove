@@ -19,10 +19,11 @@ BigQuery
 ./leftshove -config=./sample.env -seed -bq -cdc
 ```
 ### Arguments
-- config: path to environment variable file
-- seed: connect to source database and automatically collect source table information
-- bq: automatically create dataset(s)/table(s) in BigQuery matching the source table schema with compatible types
-- cdc: run change data capture
+- config: path to environment variable file (required)
+- seed: connect to source database and automatically collect source table information (default: false)
+- bq: automatically create dataset(s)/table(s) in BigQuery matching the source table schema with compatible types (default: false)
+- cdc: run change data capture (default: false)
+- runonce: interate source tables only once (default: false)
 
 ## To do:
 - implement way to define exceptions for snapshot window field name (not_modified_since, nms, etc...); for now solution is to run mutation query in sqlite

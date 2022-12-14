@@ -83,7 +83,7 @@ func cdc() error {
 				}
 				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\thours:%v\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), hours, t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
 			case diff.Seconds() < cast.ToFloat64(replicationBufferSecs*2):
-				t.NewNMS = t.NMS.Add(time.Second * cast.ToDuration(diff.Seconds()/2))
+				t.NewNMS = t.NMS.Add(time.Second * cast.ToDuration(diff.Seconds()/3))
 				log.Printf("table %v.%v\t\t\trowDiff: %v\tdiff.Hours: %v\t\tnms:%v\tnewNMS: %v\n", t.DSNEnum, t.Name, rowDiff, math.Round(diff.Hours()), t.NMS.Format("2006-01-02 15:04:05"), t.NewNMS.Format("2006-01-02 15:04:05"))
 			default:
 				t.NewNMS = currentTime.Add(-time.Second * time.Duration(replicationBufferSecs))

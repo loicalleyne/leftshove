@@ -59,7 +59,8 @@ func nmsDBOpen() (*sql.DB, error) {
 			nmsColumn VARCHAR(255) NULL, 
 			nms TIMESTAMP NULL,
 			last_row_count INTEGER NULL, 
-			dsn INTEGER NULL)`
+			dsn INTEGER NULL,
+			last_shoved_on TIMESTAMP NULL)`
 			//"CREATE TABLE `nmstables` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(64) NOT NULL, `schema` VARCHAR(64) NOT NULL, `table_schema` VARCHAR, `bq_schema` VARCHAR, `nmsColumn` VARCHAR(255) NULL, `nms` TIMESTAMP NULL, `dsn` INTEGER NULL)"
 			_, err = db.Exec(createStatement)
 			if err != nil {
@@ -173,7 +174,8 @@ func updateNMS(t table, nmsDB *sql.DB) error {
 	UPDATE nmstables
 	SET 
 		nms = ?,
-		last_row_count = ?
+		last_row_count = ?,
+		last_shoved_on = datetime('now')
 	WHERE id = ?`
 
 	_, err := nmsDB.Exec(updateQuery, t.NewNMS, t.LastRowCount, t.ID)
