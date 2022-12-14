@@ -32,4 +32,4 @@ BigQuery
 - option for output to BigQuery streaming/storage API insert
 - option for output to any Benthos output
 - handle source table name collisions; for now it is recommended to output each source to a separate BigQuery dataset
-- fix Benthos logging
+- fix Benthos logging to file
