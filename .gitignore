@@ -3,6 +3,7 @@ bentest/
 sql/
 output/
 sqlite/
+links/
 stream_configs/
 *.json
 *.env

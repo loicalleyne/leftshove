@@ -23,6 +23,7 @@ type pgTable struct {
 	schema      string
 	tableSchema string
 	nmsColumn   string
+	pKeyColumn  string
 }
 
 func getPGConnection(dbURL string) (*pgxpool.Pool, error) {
@@ -111,6 +112,26 @@ func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgD
 		return "", fmt.Errorf("queryrow failed: %v : %v", tableName, err)
 	}
 	return tableQuery, nil
+}
+
+func getTablePKey(tableName string, pgDB *pgxpool.Pool) (string, error) {
+	var pKeyColumn string
+	conn, err := pgDB.Acquire(context.Background())
+	if err != nil {
+		return pKeyColumn, fmt.Errorf("pg conn acquire error: %v", err)
+	}
+	defer conn.Release()
+	pKeyQuery := `SELECT t.table_name, c.column_name, c.ordinal_position
+	FROM information_schema.key_column_usage AS c
+	LEFT JOIN information_schema.table_constraints AS t
+	ON t.constraint_name = c.constraint_name
+	WHERE t.table_name = ? AND t.constraint_type = 'PRIMARY KEY';`
+	err = conn.QueryRow(context.Background(), pKeyQuery, tableName).Scan(&pKeyColumn)
+	if err != nil {
+		return pKeyColumn, fmt.Errorf("queryrow failed: %v : %v", tableName, err)
+	}
+	log.Printf("getTablePKey: %v primary key=%v\n", tableName, pKeyColumn)
+	return pKeyColumn, nil
 }
 
 func getTableRowCount(tableName string, pgDB *pgxpool.Pool) (int64, error) {
@@ -224,6 +245,10 @@ func getTablesWithNMS(tableSchema, nmsColumn string, dsnEnum int64, pgUnlogged [
 			continue
 		}
 		pgNMSTables[i].rowCount, err = getTableRowCount(table.name, pgDB)
+		if err != nil {
+			continue
+		}
+		pgNMSTables[i].pKeyColumn, err = getTablePKey(table.name, pgDB)
 		if err != nil {
 			continue
 		}

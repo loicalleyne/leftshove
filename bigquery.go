@@ -98,6 +98,16 @@ func createBQtables() error {
 			log.Printf("BigQuery table %v:%v.%v exists, unchanged = %v", projectID, datasetID, t.Name, unchanged)
 			// to do: add new fields to bq table if any
 		}
+		vExists, _, err := checkTableExists(datasetID, bqTableName, bigqueryClient)
+		if err != nil {
+			log.Printf("checktableexists():%v", err)
+		}
+		if !vExists && t.PKeyColumn != "" {
+			err = createBigQueryPKeyView(datasetID, bqTableName, t.PKeyColumn, bigqueryClient)
+			if err != nil {
+				return fmt.Errorf("createbigquerypkeyview() error: %v", err)
+			}
+		}
 	}
 	return nil
 }
@@ -174,12 +184,69 @@ func createBigQueryTableWithSchema(datasetID, tableID string, client *bigquery.C
 	return nil
 }
 
+func createBigQueryPKeyView(datasetID, tableID, pKeyColumn string, client *bigquery.Client) error {
+	ctx := context.Background()
+	tableFullID := client.Project() + "." + "." + datasetID + "." + tableID
+	viewQuery := "SELECT * FROM `{tableFullID}` WHERE ( {pkey} , snapshot_tm ) in (SELECT ({pkey}, max(snapshot_tm)) FROM `{tableFullID}` GROUP BY {pkey})"
+	viewQuery = strings.Replace(viewQuery, "{tableFullID}", tableFullID, 2)
+	viewQuery = strings.Replace(viewQuery, "{pkey}", pKeyColumn, 3)
+
+	metaData := &bigquery.TableMetadata{
+		ViewQuery: viewQuery,
+		Type:      bigquery.ViewTable,
+	}
+
+	tableRef := client.Dataset(datasetID).Table(tableID)
+	if err := tableRef.Create(ctx, metaData); err != nil {
+		if hasStatusCode(err, http.StatusConflict) {
+			return nil
+		}
+		return fmt.Errorf("createbigquerytablewithschema.tableref.create table %v: %v", tableID, err)
+	}
+	return nil
+}
+
 func hasStatusCode(err error, code int) bool {
 	// https://go.dev/src/net/http/status.go
 	if e, ok := err.(*googleapi.Error); ok && e.Code == code {
 		return true
 	}
 	return false
+}
+
+func importJSONExplicitSchema(projectID, datasetID, tableID string) error {
+	// projectID := "my-project-id"
+	// datasetID := "mydataset"
+	// tableID := "mytable"
+	ctx := context.Background()
+	client, err := bigquery.NewClient(ctx, projectID)
+	if err != nil {
+		return fmt.Errorf("bigquery.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	gcsRef := bigquery.NewGCSReference("gs://cloud-samples-data/bigquery/us-states/us-states.json")
+	gcsRef.SourceFormat = bigquery.JSON
+	gcsRef.Schema = bigquery.Schema{
+		{Name: "name", Type: bigquery.StringFieldType},
+		{Name: "post_abbr", Type: bigquery.StringFieldType},
+	}
+	loader := client.Dataset(datasetID).Table(tableID).LoaderFrom(gcsRef)
+	loader.WriteDisposition = bigquery.WriteEmpty
+
+	job, err := loader.Run(ctx)
+	if err != nil {
+		return err
+	}
+	status, err := job.Wait(ctx)
+	if err != nil {
+		return err
+	}
+
+	if status.Err() != nil {
+		return fmt.Errorf("job completed with error: %v", status.Err())
+	}
+	return nil
 }
 
 func pgSchemaToBqSchema(tableSchema string) ([]byte, bigquery.Schema, error) {
@@ -294,41 +361,6 @@ func pgSchemaToBqSchema(tableSchema string) ([]byte, bigquery.Schema, error) {
 		return nil, nil, fmt.Errorf("tojsonfields() error: err")
 	}
 	return bqSchemaJSON, bqTableSchema, nil
-}
-
-func importJSONExplicitSchema(projectID, datasetID, tableID string) error {
-	// projectID := "my-project-id"
-	// datasetID := "mydataset"
-	// tableID := "mytable"
-	ctx := context.Background()
-	client, err := bigquery.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("bigquery.NewClient: %v", err)
-	}
-	defer client.Close()
-
-	gcsRef := bigquery.NewGCSReference("gs://cloud-samples-data/bigquery/us-states/us-states.json")
-	gcsRef.SourceFormat = bigquery.JSON
-	gcsRef.Schema = bigquery.Schema{
-		{Name: "name", Type: bigquery.StringFieldType},
-		{Name: "post_abbr", Type: bigquery.StringFieldType},
-	}
-	loader := client.Dataset(datasetID).Table(tableID).LoaderFrom(gcsRef)
-	loader.WriteDisposition = bigquery.WriteEmpty
-
-	job, err := loader.Run(ctx)
-	if err != nil {
-		return err
-	}
-	status, err := job.Wait(ctx)
-	if err != nil {
-		return err
-	}
-
-	if status.Err() != nil {
-		return fmt.Errorf("job completed with error: %v", status.Err())
-	}
-	return nil
 }
 
 func updateTableAddColumn(projectID, datasetID, tableID string) error {

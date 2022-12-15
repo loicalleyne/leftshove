@@ -27,6 +27,7 @@ type table struct {
 	Query        string    `json:"query"`
 	stream       *service.Stream
 	NMSColumn    string `json:"nms_column"`
+	PKeyColumn   string `json:"pkey_column"`
 }
 
 func nmsDBOpen() (*sql.DB, error) {
@@ -57,12 +58,12 @@ func nmsDBOpen() (*sql.DB, error) {
 			schema VARCHAR(64) NOT NULL, 
 			table_schema VARCHAR, 
 			bq_schema VARCHAR, 
-			nmsColumn VARCHAR(255) NULL, 
+			nmsColumn VARCHAR(255) NULL,
+			pkeyColumn VARCHAR(255) NULL, 
 			nms TIMESTAMP NULL,
 			last_row_count INTEGER NULL, 
 			dsn INTEGER NULL,
 			last_shoved_on TIMESTAMP NULL)`
-			//"CREATE TABLE `nmstables` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` VARCHAR(64) NOT NULL, `schema` VARCHAR(64) NOT NULL, `table_schema` VARCHAR, `bq_schema` VARCHAR, `nmsColumn` VARCHAR(255) NULL, `nms` TIMESTAMP NULL, `dsn` INTEGER NULL)"
 			_, err = db.Exec(createStatement)
 			if err != nil {
 				return nil, fmt.Errorf("nmsDBOpen create table error: %v", err)
@@ -72,43 +73,10 @@ func nmsDBOpen() (*sql.DB, error) {
 	}
 }
 
-func seedNMSTable(pgTableWithNMS pgTable, nmsDB *sql.DB) error {
-	var id int64
-	err := nmsDB.QueryRow("SELECT id FROM nmstables WHERE name = ? AND dsn = ?", pgTableWithNMS.name, pgTableWithNMS.dsnEnum).Scan(&id)
-	if err != nil {
-		log.Printf("seedNMSTable() %v: %v\n", pgTableWithNMS.name, err)
-	}
-	if id > 0 {
-		updateQuery := `
-		UPDATE nmstables
-		SET 
-			schema = ?,
-			table_schema = ?,
-			nms = ?,
-			last_row_count = ?
-		WHERE name = ? AND id = ?`
-		_, err := nmsDB.Exec(updateQuery, pgTableWithNMS.schema, pgTableWithNMS.tableSchema, pgTableWithNMS.nmsTime, pgTableWithNMS.rowCount, pgTableWithNMS.name, pgTableWithNMS.dsnEnum)
-		if err != nil {
-			return fmt.Errorf("seednmstable() update: %v", err)
-		}
-	} else {
-		insertQuery := `
-		INSERT INTO nmstables 
-		(name, schema, table_schema, nmsColumn, nms, last_row_count, dsn) 
-		VALUES (?, ?, ?, ?, ?, ?, ?)`
-		_, err := nmsDB.Exec(insertQuery, pgTableWithNMS.name, pgTableWithNMS.schema, pgTableWithNMS.tableSchema, pgTableWithNMS.nmsColumn, pgTableWithNMS.nmsTime, pgTableWithNMS.rowCount, pgTableWithNMS.dsnEnum)
-		if err != nil {
-			return fmt.Errorf("seednmstable() insert: %v", err)
-		}
-	}
-
-	return nil
-}
-
 func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 	var tables []table
 
-	rows, err := nmsDB.Query("SELECT id, name, schema, table_schema, bq_schema, nms, nmsColumn, last_row_count, dsn, last_shoved_on FROM nmstables")
+	rows, err := nmsDB.Query("SELECT id, name, schema, table_schema, bq_schema, nms, nmsColumn, pkeyColumn, last_row_count, dsn, last_shoved_on FROM nmstables")
 	if err != nil {
 		return nil, fmt.Errorf("nmsQuery select error: %v", err)
 	}
@@ -122,11 +90,12 @@ func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 		var bqSchema sql.NullString
 		var nms time.Time
 		var nmsColumn sql.NullString
+		var pkeyColumn sql.NullString
 		var rowCount int64
 		var dsn int64
 		var lastShove time.Time
 		var t table
-		err = rows.Scan(&id, &name, &schema, &tableSchema, &bqSchema, &nms, &nmsColumn, &rowCount, &dsn, &lastShove)
+		err = rows.Scan(&id, &name, &schema, &tableSchema, &bqSchema, &nms, &nmsColumn, &pkeyColumn, &rowCount, &dsn, &lastShove)
 		if err != nil {
 			return nil, fmt.Errorf("gettableswithnms() scan error: %v", err)
 		}
@@ -137,6 +106,7 @@ func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 		t.BQSchema = bqSchema.String
 		t.NMS = nms
 		t.NMSColumn = nmsColumn.String
+		t.PKeyColumn = pkeyColumn.String
 		t.LastRowCount = rowCount
 		t.DSNEnum = dsn
 		t.LastShove = lastShove
@@ -151,6 +121,40 @@ func nmsTablesQuery(nmsDB *sql.DB, fileWrite bool) ([]table, error) {
 	}
 
 	return tables, nil
+}
+
+func seedNMSTable(pgTableWithNMS pgTable, nmsDB *sql.DB) error {
+	var id int64
+	err := nmsDB.QueryRow("SELECT id FROM nmstables WHERE name = ? AND dsn = ?", pgTableWithNMS.name, pgTableWithNMS.dsnEnum).Scan(&id)
+	if err != nil {
+		log.Printf("seedNMSTable() %v: %v\n", pgTableWithNMS.name, err)
+	}
+	if id > 0 {
+		updateQuery := `
+		UPDATE nmstables
+		SET 
+			schema = ?,
+			pkeyColumn = ?,
+			table_schema = ?,
+			nms = ?,
+			last_row_count = ?
+		WHERE name = ? AND id = ?`
+		_, err := nmsDB.Exec(updateQuery, pgTableWithNMS.schema, pgTableWithNMS.pKeyColumn, pgTableWithNMS.tableSchema, pgTableWithNMS.nmsTime, pgTableWithNMS.rowCount, pgTableWithNMS.name, pgTableWithNMS.dsnEnum)
+		if err != nil {
+			return fmt.Errorf("seednmstable() update: %v", err)
+		}
+	} else {
+		insertQuery := `
+		INSERT INTO nmstables 
+		(name, schema, pkeyColumn, table_schema, nmsColumn, nms, last_row_count, dsn) 
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
+		_, err := nmsDB.Exec(insertQuery, pgTableWithNMS.name, pgTableWithNMS.schema, pgTableWithNMS.pKeyColumn, pgTableWithNMS.tableSchema, pgTableWithNMS.nmsColumn, pgTableWithNMS.nmsTime, pgTableWithNMS.rowCount, pgTableWithNMS.dsnEnum)
+		if err != nil {
+			return fmt.Errorf("seednmstable() insert: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func seedStateBackup(tables []table) error {
@@ -172,22 +176,6 @@ func seedStateBackup(tables []table) error {
 	return nil
 }
 
-func updateNMS(t table, nmsDB *sql.DB) error {
-	updateQuery := `
-	UPDATE nmstables
-	SET 
-		nms = ?,
-		last_row_count = ?,
-		last_shoved_on = datetime('now')
-	WHERE id = ?`
-
-	_, err := nmsDB.Exec(updateQuery, t.NewNMS, t.LastRowCount, t.ID)
-	if err != nil {
-		return fmt.Errorf("updateNMS() exec error: %v", err)
-	}
-	return nil
-}
-
 func updateCachedBQSchema(tableID int, nmsDB *sql.DB, bqSchema bigquery.Schema) error {
 	bqs, err := bqSchema.ToJSONFields()
 	if err != nil {
@@ -201,6 +189,22 @@ func updateCachedBQSchema(tableID int, nmsDB *sql.DB, bqSchema bigquery.Schema) 
 	WHERE id = ?`
 
 	_, err = nmsDB.Exec(updateQuery, string(bqs), tableID)
+	if err != nil {
+		return fmt.Errorf("updateNMS() exec error: %v", err)
+	}
+	return nil
+}
+
+func updateNMS(t table, nmsDB *sql.DB) error {
+	updateQuery := `
+	UPDATE nmstables
+	SET 
+		nms = ?,
+		last_row_count = ?,
+		last_shoved_on = datetime('now')
+	WHERE id = ?`
+
+	_, err := nmsDB.Exec(updateQuery, t.NewNMS, t.LastRowCount, t.ID)
 	if err != nil {
 		return fmt.Errorf("updateNMS() exec error: %v", err)
 	}
