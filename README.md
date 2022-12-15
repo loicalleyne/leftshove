@@ -15,6 +15,7 @@ BigQuery
 
 ### BigQuery:
 - automatic creation of dataset and tables (requires GCP Application Default Credentials with appropriate permissions)
+- automatic creation of nms views showing current state
 
 ## Run:
 ```shell
@@ -36,4 +37,3 @@ BigQuery
 - option for output to any Benthos output
 - handle source table name collisions; for now it is recommended to output each source to a separate BigQuery dataset
 - fix Benthos logging to file
-- automatic creation of BigQuery views showing current state
