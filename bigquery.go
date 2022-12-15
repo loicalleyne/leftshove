@@ -98,12 +98,12 @@ func createBQtables() error {
 			log.Printf("BigQuery table %v:%v.%v exists, unchanged = %v", projectID, datasetID, t.Name, unchanged)
 			// to do: add new fields to bq table if any
 		}
-		vExists, _, err := checkTableExists(datasetID, bqTableName, bigqueryClient)
+		vExists, _, err := checkTableExists(datasetID, t.Name, bigqueryClient)
 		if err != nil {
 			log.Printf("checktableexists():%v", err)
 		}
 		if !vExists && t.PKeyColumn != "" {
-			err = createBigQueryPKeyView(datasetID, bqTableName, t.PKeyColumn, bigqueryClient)
+			err = createBigQueryPKeyView(datasetID, t.Name, t.PKeyColumn, bigqueryClient)
 			if err != nil {
 				return fmt.Errorf("createbigquerypkeyview() error: %v", err)
 			}
