@@ -576,8 +576,8 @@ github.com/trivago/tgo v1.0.7/go.mod h1:w4dpD+3tzNIIiIfkWWa85w5/B77tlvdZckQ+6PkF
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/urfave/cli/v2 v2.11.0 h1:c6bD90aLd2iEsokxhxkY5Er0zA2V9fId2aJfwmrF+do=
 github.com/urfave/cli/v2 v2.11.0/go.mod h1:f8iq5LtQ/bLxafbdBSLPPNsgaW0l/2fYYEHhAyPlwvo=
-github.com/waclawthedev/go-sugaring v1.0.1 h1:RKNilmxrX70QcjKArbFhfZva2AiQI9WMo6GnChODPE0=
-github.com/waclawthedev/go-sugaring v1.0.1/go.mod h1:i/bE9Wx5D87sI9gNF6YprGe5bJI0hI7RFVbn8IAvZy4=
+github.com/waclawthedev/go-sugaring v1.0.2 h1:+6YUTW07JCHiLZnSJcV9Nq9kJDE8PxXluR030pyq1GM=
+github.com/waclawthedev/go-sugaring v1.0.2/go.mod h1:i/bE9Wx5D87sI9gNF6YprGe5bJI0hI7RFVbn8IAvZy4=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.0.2/go.mod h1:1WAq6h33pAW+iRreB34OORO2Nf7qel3VV3fjBj+hCSs=
