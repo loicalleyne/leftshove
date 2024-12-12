@@ -10,7 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.0
-	github.com/waclawthedev/go-sugaring v1.0.1
+	github.com/waclawthedev/go-sugaring v1.0.2
 	google.golang.org/api v0.210.0
 	modernc.org/sqlite v1.21.2
 )
