@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cast v1.7.0
 	github.com/waclawthedev/go-sugaring v1.0.2
 	google.golang.org/api v0.211.0
-	modernc.org/sqlite v1.21.2
+	modernc.org/sqlite v1.34.2
 )
 
 require (
@@ -76,6 +76,7 @@ require (
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/influxdata/go-syslog/v3 v3.0.0 // indirect
 	github.com/itchyny/gojq v0.12.6 // indirect
 	github.com/itchyny/timefmt-go v0.1.3 // indirect
@@ -84,7 +85,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jhump/protoreflect v1.10.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/fs v0.1.0 // indirect
@@ -95,9 +95,10 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.19 // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
+	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/nsf/jsondiff v0.0.0-20210926074059-1e845ec5d249 // indirect
 	github.com/paulmach/orb v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
@@ -138,7 +139,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.30.0 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
@@ -155,13 +156,10 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	lukechampine.com/uint128 v1.3.0 // indirect
-	modernc.org/cc/v3 v3.40.0 // indirect
-	modernc.org/ccgo/v3 v3.16.13 // indirect
-	modernc.org/libc v1.22.4 // indirect
-	modernc.org/mathutil v1.5.0 // indirect
-	modernc.org/memory v1.5.0 // indirect
-	modernc.org/opt v0.1.3 // indirect
-	modernc.org/strutil v1.1.3 // indirect
+	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
+	modernc.org/libc v1.55.3 // indirect
+	modernc.org/mathutil v1.6.0 // indirect
+	modernc.org/memory v1.8.0 // indirect
+	modernc.org/strutil v1.2.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 )
