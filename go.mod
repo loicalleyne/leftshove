@@ -11,15 +11,15 @@ require (
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.0
 	github.com/waclawthedev/go-sugaring v1.0.2
-	google.golang.org/api v0.211.0
+	google.golang.org/api v0.212.0
 	modernc.org/sqlite v1.34.2
 )
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.12.1 // indirect
+	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/pubsub v1.45.1 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
@@ -138,7 +138,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
