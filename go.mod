@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cast v1.7.1
 	github.com/waclawthedev/go-sugaring v1.0.2
 	google.golang.org/api v0.214.0
-	modernc.org/sqlite v1.34.3
+	modernc.org/sqlite v1.34.4
 )
 
 require (
