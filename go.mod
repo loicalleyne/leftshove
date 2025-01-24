@@ -11,7 +11,7 @@ require (
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.1
 	github.com/waclawthedev/go-sugaring v1.0.2
-	google.golang.org/api v0.217.0
+	google.golang.org/api v0.218.0
 	modernc.org/sqlite v1.34.5
 )
 
