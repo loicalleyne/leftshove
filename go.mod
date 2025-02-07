@@ -11,14 +11,14 @@ require (
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.1
 	github.com/waclawthedev/go-sugaring v1.0.2
-	google.golang.org/api v0.219.0
+	google.golang.org/api v0.220.0
 	modernc.org/sqlite v1.34.5
 )
 
 require (
 	cel.dev/expr v0.19.2 // indirect
 	cloud.google.com/go v0.118.1 // indirect
-	cloud.google.com/go/auth v0.14.0 // indirect
+	cloud.google.com/go/auth v0.14.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.3.1 // indirect
