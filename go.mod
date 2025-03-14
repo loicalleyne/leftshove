@@ -1,6 +1,8 @@
 module leftshove
 
 go 1.23
+toolchain go1.24.1
+
 require (
 	cloud.google.com/go/bigquery v1.66.2
 	github.com/Jeffail/gabs/v2 v2.7.0
@@ -10,7 +12,7 @@ require (
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.1
 	github.com/waclawthedev/go-sugaring v1.0.2
-	google.golang.org/api v0.225.0
+	google.golang.org/api v0.226.0
 	modernc.org/sqlite v1.36.0
 )
 
