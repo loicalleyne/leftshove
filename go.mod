@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	cloud.google.com/go/bigquery v1.68.0
+	cloud.google.com/go/bigquery v1.69.0
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/benthosdev/benthos/v4 v4.10.0
 	github.com/jackc/pgx/v5 v5.7.5
