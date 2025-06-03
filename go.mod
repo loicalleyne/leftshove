@@ -11,7 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/remeh/sizedwaitgroup v1.0.0
-	github.com/spf13/cast v1.8.0
+	github.com/spf13/cast v1.9.2
 	github.com/waclawthedev/go-sugaring v1.0.2
 	google.golang.org/api v0.235.0
 	modernc.org/sqlite v1.37.1
