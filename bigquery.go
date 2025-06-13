@@ -313,7 +313,7 @@ func pgSchemaToBqSchema(tableSchema string) ([]byte, bigquery.Schema, error) {
 					case "json":
 						field.Type = bigquery.StringFieldType
 					case "jsonb":
-						field.Type = bigquery.StringFieldType
+						field.Type = bigquery.JSONFieldType 
 					case "ltree":
 						field.Type = bigquery.StringFieldType
 					case "name":
