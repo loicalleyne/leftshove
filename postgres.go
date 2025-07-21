@@ -46,7 +46,7 @@ func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgD
 	SELECT 
 		CONCAT(
 			'SELECT ', 
-				ARRAY_TO_STRING(ARRAY_AGG(CONCAT(column_name, ' ')), ', '),', 
+				ARRAY_TO_STRING(ARRAY_AGG(CONCAT(column_name::TEXT, ' ')), ', '),', 
 				now () AS snapshot_tm 
 			FROM ', table_name, ' 
 			WHERE {minfield} > ','''{nms}''
@@ -56,10 +56,10 @@ func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgD
 			table_name, 
 			ordinal_position, 
 			CASE 
-				WHEN udt_name LIKE '\_%' THEN CONCAT('array_to_json(',column_name,') AS ', column_name) 
-				WHEN udt_name LIKE '{percent}vector' THEN CONCAT('array_to_json(',column_name,') AS ', column_name)
+				WHEN udt_name LIKE '\_%' THEN CONCAT('array_to_json(',column_name::TEXT,') AS ', column_name::TEXT) 
+				WHEN udt_name LIKE '{percent}vector' THEN CONCAT('array_to_json(',column_name::TEXT,') AS ', column_name::TEXT)
 				{munging}
-				ELSE column_name 
+				ELSE column_name::TEXT 
 			END AS column_name 
 			FROM INFORMATION_SCHEMA.columns 
 		WHERE table_schema = '{table_schema}'
@@ -75,12 +75,12 @@ func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgD
 			if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_NULL")) {
 				munging = `
 				WHEN udt_name IN ('timestamp', 'timestamptz') 
-					THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN NULL ELSE ', column_name, ' END AS ', column_name)`
+					THEN CONCAT('CASE WHEN ',column_name::TEXT,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN NULL ELSE ', column_name::TEXT, ' END AS ', column_name::TEXT)`
 			}
 			if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_MIN")) {
 				munging = `
 					WHEN udt_name IN ('timestamp', 'timestamptz') 
-						THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name, ' END AS ', column_name)`
+						THEN CONCAT('CASE WHEN ',column_name::TEXT,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name::TEXT, ' END AS ', column_name::TEXT)`
 			}
 		}
 	}
@@ -88,14 +88,14 @@ func getTableNMSQuery(tableSchema, tableName, nmsColumn, nms, newNMS string, pgD
 		if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_NULL")) {
 			munging = `
 			WHEN udt_name IN ('timestamp', 'timestamptz') 
-				THEN CONCAT('CASE WHEN ',column_name,' < ''1970-01-01 00:00:00'' THEN NULL ELSE ', column_name, ' END AS ', column_name)`
+				THEN CONCAT('CASE WHEN ',column_name::TEXT,' < ''1970-01-01 00:00:00'' THEN NULL ELSE ', column_name::TEXT, ' END AS ', column_name::TEXT)`
 		}
 		if cast.ToBool(os.Getenv("MUNGE_INVALID_TIMESTAMPS_TO_MIN")) {
 			t := cast.ToTime(os.Getenv("MUNGE_MIN_TIMESTAMP"))
 			if !t.IsZero() && t.Before(time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)) {
 				munging = `
 				WHEN udt_name IN ('timestamp', 'timestamptz') 
-					THEN CONCAT('CASE WHEN ',column_name,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name, ' END AS ', column_name)`
+					THEN CONCAT('CASE WHEN ',column_name::TEXT,' < ''` + t.Format("2006-01-02 15:04:05") + `'' THEN to_timestamp(''` + t.Format("2006-01-02 15:04:05") + `'',''YYYY-MM-DD HH24:MI:SS'') ELSE ', column_name::TEXT, ' END AS ', column_name::TEXT)`
 			}
 		}
 	}
