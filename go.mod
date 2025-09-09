@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/bigquery v1.70.0
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/benthosdev/benthos/v4 v4.10.0
-	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.9.2
